@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Rainier-CardDefinitionFetcher": {
+      "commandName": "Project",
+      "commandLineArgs": "--output-folder R:\\ --fetch-carddefinitions --fetch-rules"
+    }
+  }
+}
