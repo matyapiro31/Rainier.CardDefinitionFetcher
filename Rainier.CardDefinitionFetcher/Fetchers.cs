@@ -214,6 +214,10 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
                     {
                         ConfigDocumentGetResponse dbRaw = client.GetConfigDocumentSync(dbName);
                         File.WriteAllBytes(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DATABASE, dbName + ".db"), dbRaw.data["table"].contentBinary);
+
+                        string jsonFilename = Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DATABASE, dbName + ".json");
+                        WriteDatatableToFile(dbRaw.data["table"].contentBinary, DataTableCustomFormatter.Deserialize, jsonFilename);
+
                         fetchTask.Increment(1.0d);
                     }
                 });
@@ -225,6 +229,9 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
 
             ConfigDocumentGetResponse actionsDocument = client.GetConfigDocumentSync("actionsTable_0.0");
             File.WriteAllBytes(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_ACTIONS, "actions.db"), actionsDocument.data["actionsTable"].contentBinary);
+
+            string jsonFilename = Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_ACTIONS, "actions.json");
+            WriteDatatableToFile(actionsDocument.data["actionsTable"].contentBinary, DataTableCustomFormatter.Deserialize, jsonFilename);
         }
 
         public static void FetchAndSaveAiCustomizationData(Client client)
@@ -273,6 +280,18 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             File.WriteAllText(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_QUEST_DATA, "current-quest-data.json"), JsonConvert.SerializeObject(questData, jss));
 
             return questData;
+        }
+
+        private static void WriteDatatableToFile(byte[] dbDocumentValue, Func<byte[], bool, DataTable> customFormatterImplementation, string filename)
+        {
+            using DataTable dt = customFormatterImplementation(dbDocumentValue, false);
+            using StreamWriter writer = new StreamWriter(filename, append: false, Encoding.UTF8);
+            JsonSerializer serializer = new JsonSerializer()
+            {
+                Formatting = Formatting.Indented
+            };
+
+            serializer.Serialize(writer, dt);
         }
     }
 }

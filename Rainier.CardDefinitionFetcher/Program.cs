@@ -148,6 +148,12 @@ internal class Program
             }
         }
 
+        if(args.Contains(ARG_FETCH_ALL_QUESTS))
+        {
+            anyArgWasSpecified = true;
+            Fetchers.FetchQuestData(client);
+        }
+
         if(!anyArgWasSpecified)
         {
             Console.WriteLine("No fetch argument was specified.");
