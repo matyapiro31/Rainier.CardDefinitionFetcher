@@ -24,6 +24,7 @@ using static TPCI.PTCS.PTCSUtils;
 using Omukade.Tools.RainierCardDefinitionFetcher.Model;
 using Newtonsoft.Json;
 using Omukade.AutoPAR;
+using Omukade.AutoPAR.Rainier;
 
 internal class Program
 {
@@ -50,17 +51,23 @@ internal class Program
         // Load secrets
         SecretsConfig secrets = LoadSecrets();
 
-        Console.WriteLine("Initializing AutoPAR...");
-        string autoParSearchFolder = secrets.AutoParSearchFolder ?? Omukade.AutoPAR.Rainier.RainierFetcher.UpdateDirectory;
-
-        if(autoParSearchFolder == null)
+        Console.WriteLine("Checking for Rainier updates...");
+        UpdaterManifest updaterManifest = RainierFetcher.GetUpdateManifestAsync().Result;
+        if(RainierFetcher.DoesNeedUpdate(updaterManifest))
         {
-            Console.Error.WriteLine("AutoPAR: PTCGL folder not configured, and PTCGL could not be autodetected.");
-            Environment.Exit(1);
-            return;
+            Console.WriteLine($"Update detected; downloading...");
+            RainierFetcher.DownloadUpdateFile(updaterManifest).Wait();
+            Console.WriteLine("Update downloaded; extracting...");
+            RainierFetcher.ExtractUpdateFile(deleteExistingUpdateFolder: true);
+            Console.WriteLine("Update complete and extracted.");
+        }
+        else
+        {
+            Console.WriteLine("Rainier client is up-to-date");
         }
 
-        AssemblyLoadInterceptor.Initialize(autoParSearchFolder);
+        Console.WriteLine("Initializing AutoPAR...");
+        AssemblyLoadInterceptor.Initialize(RainierFetcher.UpdateDirectory);
 
         PostParMain(args, secrets);
     }
@@ -242,7 +249,7 @@ internal class Program
         }
         else
         {
-            outputFolder = Omukade.AutoPAR.Rainier.RainierSharedDataHelper.GetSharedDataDirectory();
+            outputFolder = RainierSharedDataHelper.GetSharedDataDirectory();
         }
 
         return outputFolder;
@@ -271,7 +278,7 @@ Fetch arguments (as many as desired can be specified):
 Omukade Cheyenne servers typically only need the results of --fetch-carddefinitions --fetch-rules
 
 Output arguments:
---output-folder (/foo/bar)  Writes all fetched data to this folder. By default, the current working directory is used for output.
+--output-folder (/foo/bar)  DEPRECATED: Writes all fetched data to this folder. By default, the Common Omukade Datastore is used for output.
                             Directories will be created under this folder with all retrieved information.
 
 Other arguments:
