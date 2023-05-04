@@ -145,6 +145,22 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
 
                         foreach (JObject card in queryResultCardData)
                         {
+                            // Attempt to normalize the releaseDate to PT ISO dates, as they randomly warp between both UTC <--> PT and ISO <--> mm/dd/yy, and make it seem like there are more differences than there really are
+                            if(card.ContainsKey("releaseDate"))
+                            {
+                                string? releaseDateRawValue = card.Value<string>("releaseDate");
+                                if(releaseDateRawValue != null)
+                                {
+                                    DateTime rawReleaseDate = DateTime.Parse(releaseDateRawValue);
+
+                                    // If Hour is 18 or 17, then the time is UTC. Offset is based on if PT is in DST at that time or not.
+                                    if (rawReleaseDate.Hour == 18) rawReleaseDate = rawReleaseDate.AddHours(-8);
+                                    else if (rawReleaseDate.Hour == 17) rawReleaseDate = rawReleaseDate.AddHours(-7);
+
+                                    card["releaseDate"] = new JValue(rawReleaseDate.ToString("s"));
+                                }
+                            }
+
                             string fname = card.Value<string>("cardSourceID") + ".json";
                             string fullPath = Path.Combine(setFolder, fname);
 

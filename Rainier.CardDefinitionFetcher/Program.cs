@@ -51,7 +51,7 @@ internal class Program
         SecretsConfig secrets = LoadSecrets();
 
         Console.WriteLine("Initializing AutoPAR...");
-        string? autoParSearchFolder = secrets.AutoParSearchFolder ?? Omukade.AutoPAR.InstallationFinder.FindPtcglInstallAssemblyDirectory();
+        string autoParSearchFolder = secrets.AutoParSearchFolder ?? Omukade.AutoPAR.Rainier.RainierFetcher.UpdateDirectory;
 
         if(autoParSearchFolder == null)
         {
@@ -242,7 +242,7 @@ internal class Program
         }
         else
         {
-            outputFolder = Environment.CurrentDirectory;
+            outputFolder = Omukade.AutoPAR.Rainier.RainierSharedDataHelper.GetSharedDataDirectory();
         }
 
         return outputFolder;
