@@ -20,6 +20,6 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher.Model
 {
     internal class SetNamesManifest
     {
-        public string[] sets;
+        public string[] sets=[""];
     }
 }

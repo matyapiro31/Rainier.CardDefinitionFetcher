@@ -22,36 +22,38 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Omukade.ProcedualAssemblyRewriter\Omukade.AutoPAR\Omukade.AutoPAR.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
 	  <Reference Include="CardDatabase.DataAccess">
-		  <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\CardDatabase.DataAccess.dll</HintPath>
+		  <HintPath>.\PTCGLLib\CardDatabase.DataAccess.dll</HintPath>
 		  <Private>False</Private>
 	  </Reference>
     <Reference Include="FlatBuffers.Core">
-      <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\FlatBuffers.Core.dll</HintPath>
+      <HintPath>.\PTCGLLib\FlatBuffers.Core.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>.\PTCGLLib\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="MatchLogic">
-      <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\MatchLogic.dll</HintPath>
+      <HintPath>.\PTCGLLib\MatchLogic.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>.\PTCGLLib\Mono.Cecil.dll</HintPath>
+    </Reference>
     <Reference Include="Platform.Sdk">
-      <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\Platform.Sdk.dll</HintPath>
+      <HintPath>.\PTCGLLib\Platform.Sdk.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="SharedLogicUtils">
-      <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\SharedLogicUtils.dll</HintPath>
+      <HintPath>.\PTCGLLib\SharedLogicUtils.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="TPCI.PTCS">
-      <HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\TPCI.PTCS.dll</HintPath>
+      <HintPath>.\PTCGLLib\TPCI.PTCS.dll</HintPath>
       <Private>False</Private>
     </Reference>
 	<Reference Include="UnityEngine.CoreModule">
-		<HintPath>..\..\Rainier-Assemblies\1.5.0.178317.20230418_1734_PAR\UnityEngine.CoreModule.dll</HintPath>
+		<HintPath>.\PTCGLLib\UnityEngine.CoreModule.dll</HintPath>
 		<Private>False</Private>
 	</Reference>
   </ItemGroup>

@@ -30,7 +30,7 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
 {
     internal static class ClientExtensions
     {
-        static void GenericErrorHandler(Client sdk, HttpResponseMessage response, ErrorResponse error)
+        public static void GenericErrorHandler(IClient sdk, HttpResponseMessage response, ErrorResponse error)
         {
             if (error.networkException != null) AnsiConsole.WriteException(error.networkException);
             else if (error.errors?.Any() == true)
