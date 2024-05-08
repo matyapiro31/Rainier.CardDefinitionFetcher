@@ -402,11 +402,3 @@ FodyWeavers.xsd
 
 */PTCGLLib/*.dll
 desktop.ini
-*/AssemblyLoadInterceptor.cs
-*/CecilExtensions.cs
-*/CecilHelpers.cs
-*/LocalizedReleaseNote.cs
-*/ParCore.cs
-*/RainierFetcher.cs
-*/RainierSharedDataHelper.cs
-*/UpdaterManifest.cs

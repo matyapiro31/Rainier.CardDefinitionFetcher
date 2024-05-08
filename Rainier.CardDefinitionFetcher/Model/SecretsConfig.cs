@@ -32,5 +32,9 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher.Model
 
         [JsonProperty(PropertyName = "autopar-search-folder")]
         public string AutoParSearchFolder;
+        [JsonProperty(PropertyName = "refresh_token")]
+        public string RefreshToken;
+        [JsonProperty(PropertyName = "expires_in")]
+        public int ExpiresIn;
     }
 }

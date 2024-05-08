@@ -16,8 +16,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-using Platform.Sdk;
-using Platform.Sdk.Models.Account;
+//using Platform.Sdk;
+//using Platform.Sdk.Models.Account;
+using ClientNetworking;
+using ClientNetworking.Models.Account;
 using Omukade.Tools.RainierCardDefinitionFetcher;
 using Spectre.Console;
 using static TPCI.PTCS.PTCSUtils;
@@ -25,6 +27,8 @@ using Omukade.Tools.RainierCardDefinitionFetcher.Model;
 using Newtonsoft.Json;
 using Omukade.AutoPAR;
 using Omukade.AutoPAR.Rainier;
+using TPCI.PTCS;
+using System.Reflection;
 
 internal class Program
 {
@@ -39,6 +43,8 @@ internal class Program
     const string ARG_FETCH_CURRENT_QUESTS = "--fetch-currentquests";
     const string ARG_FETCH_AIDECKS = "--fetch-aidecks";
     const string ARG_OUTPUT_FOLDER = "--output-folder";
+    const string ARG_INPUT_TOKEN = "--input-tokenjson";
+    const string ARG_REFRESH_TOKEN = "--refresh-token";
     const string ARG_HELP_LONG = "--help";
     const string ARG_HELP_SHORT = "-h";
 
@@ -83,10 +89,40 @@ internal class Program
         }
 
         // Parse output folder if needed
-        outputFolder = GetOutputFolder(args);
+        outputFolder = GetOptionDirectory(args, ARG_OUTPUT_FOLDER);
 
         Console.WriteLine("Logging in...");
-        TokenData tokenData = AccessHelper.GetTokenForUsernameAndPassword(secrets.username, secrets.password);
+        TokenData tokenData;
+        if (args.Contains(ARG_INPUT_TOKEN))
+        {
+            Console.WriteLine("Input token JSON here.");
+            string? TokenJson = Console.ReadLine();
+            if (TokenJson != null)
+            {
+                tokenData = JsonConvert.DeserializeObject<PTCSUtils.TokenData>(TokenJson);
+            }
+            else
+            {
+                tokenData = AccessHelper.GetTokenForUsernameAndPassword();
+            }
+        }
+        else if (args.Contains(ARG_REFRESH_TOKEN))
+        {
+            //Console.WriteLine("Input refresh token here.");
+            string? RefreshToken = args.SkipWhile(arg => arg != ARG_REFRESH_TOKEN).Skip(1).FirstOrDefault();
+            if (RefreshToken!=null && !RefreshToken.StartsWith("--"))
+            {
+                tokenData = AccessHelper.GetTokenByOAuth(RefreshToken);
+            }
+            else
+            {
+                tokenData = AccessHelper.GetTokenForUsernameAndPassword();
+            }
+        }
+        else
+        {
+            tokenData = AccessHelper.GetTokenForUsernameAndPassword();
+        }
         Console.WriteLine("Logged in Successfully");
 
         // Access Key is hardcoded in Client.Setup
@@ -106,12 +142,22 @@ internal class Program
         // * Guid.NewGuid()
         string CLIENT_ID = tokenData.id_token ?? Guid.NewGuid().ToString(); // "6a9d54403b2ba18414990995b57b2632";
 
-        Client client = new ClientBuilder()
+        Client client = (Client)new ClientBuilder()
             .WithStage(Stages.PROD)
             .WithAccessKey(ACCESS_KEY)
             .WithDeviceInfo(deviceId: DEVICE_ID, deviceType: null, "Windows")
-            .Create(clientId: CLIENT_ID);
-
+            .Build(clientId: CLIENT_ID);
+        HashSet<string> updatedApis = new HashSet<string> {
+            "/account/v1/external/token/login",
+            "/account/v1/external/token/register",
+            "/commerce/v1/external/webccr/can_redeem",
+            "/commerce/v1/external/webccr/redeem",
+            "/commerce/v1/external/webccr/verify",
+            "/user/v1/external/routing/route"
+        };
+        // Update to new APIs. (never used)
+        // Use dnspy to change Platform.Sdk.HttpRouter.RouteQuery(). 
+        typeof(Client)?.GetField("AnonymousApis", BindingFlags.Instance | BindingFlags.Public)?.SetValue(client, updatedApis);
         client.RegisterAsync().Wait();
         client.MakeSyncCall<string, string, TokenResponse>(client.AuthAsync, tokenData.access_token, "PJWT");
 
@@ -211,22 +257,22 @@ internal class Program
         return secrets;
     }
 
-    private static string GetOutputFolder(string[] args)
+    private static string GetOptionDirectory(string[] args, string option)
     {
         string? outputFolder;
-        if (args.Contains(ARG_OUTPUT_FOLDER))
+        if (args.Contains(option))
         {
-            outputFolder = args.SkipWhile(arg => arg != ARG_OUTPUT_FOLDER).Skip(1).FirstOrDefault();
+            outputFolder = args.SkipWhile(arg => arg != option).Skip(1).FirstOrDefault();
             if (outputFolder == null)
             {
-                string err = ARG_OUTPUT_FOLDER + " specified, but no output folder provided";
+                string err = option + " specified, but no output folder provided";
                 Console.Error.WriteLine(err);
                 Environment.Exit(1);
                 throw new ArgumentException(err);
             }
             else if (outputFolder.StartsWith("--"))
             {
-                string err = ARG_OUTPUT_FOLDER + " specified, but output folder looks like another argument";
+                string err = option + " specified, but output folder looks like another argument";
                 Console.Error.WriteLine(err);
                 Environment.Exit(1);
                 throw new ArgumentException(err);
@@ -282,6 +328,8 @@ Output arguments:
                             Directories will be created under this folder with all retrieved information.
 
 Other arguments:
+--refresh-token (token)  Login with OAuth2.0 refresh token. Youcan use Refresh token only once.
+--input-tokenjson        Read Token JSON text from stdin.
 -h / --help             This help text. Will also appear automatically if run with no fetch arguments, or no arguments at all.
 """
         );
