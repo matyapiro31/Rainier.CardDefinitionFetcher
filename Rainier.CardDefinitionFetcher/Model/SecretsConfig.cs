@@ -27,9 +27,6 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher.Model
 {
     public record struct SecretsConfig
     {
-        public string username;
-        public string password;
-
         [JsonProperty(PropertyName = "autopar-search-folder")]
         public string AutoParSearchFolder;
         [JsonProperty(PropertyName = "refresh_token")]

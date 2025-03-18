@@ -29,6 +29,7 @@ using Omukade.AutoPAR;
 using Omukade.AutoPAR.Rainier;
 using TPCI.PTCS;
 using System.Reflection;
+using System.Collections.Generic;
 
 internal class Program
 {
@@ -42,21 +43,17 @@ internal class Program
     const string ARG_FETCH_ALL_QUESTS = "--fetch-allquests";
     const string ARG_FETCH_CURRENT_QUESTS = "--fetch-currentquests";
     const string ARG_FETCH_AIDECKS = "--fetch-aidecks";
+    const string ARG_FETCH_OTHERDB = "--fetch-otherdb";
     const string ARG_OUTPUT_FOLDER = "--output-folder";
-    const string ARG_INPUT_TOKEN = "--input-tokenjson";
+    const string ARG_INPUT_TOKEN = "--input-token";
     const string ARG_REFRESH_TOKEN = "--refresh-token";
     const string ARG_HELP_LONG = "--help";
     const string ARG_HELP_SHORT = "-h";
-
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    static internal string outputFolder;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-
+    // Default is User's AppData/Local/omukade/rainier-shared
+    static internal string outputFolder = RainierSharedDataHelper.GetSharedDataDirectory();
     private static void Main(string[] args)
     {
-        // Load secrets
-        SecretsConfig secrets = LoadSecrets();
-
+        // Log in to the Pokemon TCG API with Browser.
         Console.WriteLine("Checking for Rainier updates...");
         UpdaterManifest updaterManifest = RainierFetcher.GetUpdateManifestAsync().Result;
         if(RainierFetcher.DoesNeedUpdate(updaterManifest))
@@ -75,10 +72,10 @@ internal class Program
         Console.WriteLine("Initializing AutoPAR...");
         AssemblyLoadInterceptor.Initialize(RainierFetcher.UpdateDirectory);
 
-        PostParMain(args, secrets);
+        PostParMain(args);
     }
 
-    private static void PostParMain(string[] args, SecretsConfig secrets)
+    private static void PostParMain(string[] args)
     {
         Console.WriteLine("Rainer Card Definition Fetcher");
 
@@ -88,8 +85,28 @@ internal class Program
             return;
         }
 
-        // Parse output folder if needed
-        outputFolder = GetOptionDirectory(args, ARG_OUTPUT_FOLDER);
+        // Check if login with refresh token is enabled.
+        if (!Directory.Exists(RainierSharedDataHelper.GetSharedDataDirectory()) || !File.Exists(Path.Combine(RainierSharedDataHelper.GetSharedDataDirectory(), "config-rcd.json")))
+        {
+            Console.WriteLine("Reading from Environment Variables PTCGL_FETCHER_REFRESH_TOKEN...");
+            if (Environment.GetEnvironmentVariable("PTCGL_FETCHER_REFRESH_TOKEN") != null)
+            {
+                args = args.Prepend(Environment.GetEnvironmentVariable("PTCGL_FETCHER_REFRESH_TOKEN")).Prepend(ARG_REFRESH_TOKEN).ToArray()!;
+                RainierSharedDataHelper.CreateRegistryFile(Environment.GetEnvironmentVariable("PTCGL_FETCHER_REFRESH_TOKEN")!);
+            }
+            else
+            {
+                Console.WriteLine("No refresh token found in Environment Variables. Creating registry file...");
+            }
+        }
+        else
+        {
+            SecretsConfig secrets = JsonConvert.DeserializeObject<SecretsConfig>(File.ReadAllText(Path.Combine(RainierSharedDataHelper.GetSharedDataDirectory(), "config-rcd.json")));
+            args = args.Prepend(secrets.RefreshToken).Prepend(ARG_REFRESH_TOKEN).ToArray()!;
+        }
+
+            // Parse output folder if needed
+            outputFolder = GetOptionDirectory(args, ARG_OUTPUT_FOLDER);
 
         Console.WriteLine("Logging in...");
         TokenData tokenData;
@@ -207,54 +224,17 @@ internal class Program
             Fetchers.FetchQuestData(client);
         }
 
-        if(!anyArgWasSpecified)
+        if (args.Contains(ARG_FETCH_OTHERDB))
+        {
+            anyArgWasSpecified = true;
+            Fetchers.FetchAndSaveOtherDatabase(client);
+        }
+
+        if (!anyArgWasSpecified)
         {
             Console.WriteLine("No fetch argument was specified.");
             ShowHelpText();
         }
-    }
-
-    private static SecretsConfig LoadSecrets()
-    {
-        const string SECRETS_FILE = "secrets.json";
-        const string SECRETS_EXAMPLE_FILE = "secrets.example.json";
-        const string SECRETS_SAMPLE_USERNAME = "myname";
-        const string SECRETS_SAMPLE_PASSWORD = "mypassword";
-
-        const string SECRETS_EXAMPLE_CONTENTS = "{\"username\": \"myname\",\""+SECRETS_SAMPLE_USERNAME+"\": \""+SECRETS_SAMPLE_PASSWORD+"\"}";
-        if (!File.Exists(SECRETS_FILE))
-        {
-            Console.Error.WriteLine("Secrets file (" + SECRETS_FILE + ") not found. Use " + SECRETS_EXAMPLE_FILE + " as a starting point.");
-
-            if (!File.Exists(SECRETS_EXAMPLE_FILE))
-            {
-                Console.Error.WriteLine("(The example secrets file did not already exist; one has been created)");
-                File.WriteAllText(SECRETS_EXAMPLE_FILE, SECRETS_EXAMPLE_CONTENTS);
-            }
-
-            Environment.Exit(1);
-        }
-
-        SecretsConfig secrets;
-        try
-        {
-            secrets = JsonConvert.DeserializeObject<SecretsConfig>(File.ReadAllText(SECRETS_FILE));
-        }
-        catch(Exception e)
-        {
-            Console.Error.WriteLine($"There was a problem loading the secrets file - {e.Message} ({e.GetType().FullName})");
-            Console.Error.WriteLine("The secrets file may be corrupted. Correct it and try again.");
-            throw;
-        }
-
-        if(string.IsNullOrEmpty(secrets.username) || secrets.username == SECRETS_SAMPLE_USERNAME || string.IsNullOrEmpty(secrets.password) || secrets.password == SECRETS_SAMPLE_PASSWORD)
-        {
-            Console.Error.WriteLine("The secrets file appears to have either the example username/password, or they're not set.");
-            Console.Error.WriteLine("Add the credentials for a valid Pokemon Trainers Club account to the secrets file.");
-            Environment.Exit(1);
-        }
-
-        return secrets;
     }
 
     private static string GetOptionDirectory(string[] args, string option)
@@ -311,6 +291,7 @@ Fetch arguments (as many as desired can be specified):
 --fetch-cardactions     Fetches the localized list of card actions.
 --fetch-carddb          Fetches the list of cards for display in-game (not implementations, see --fetch-carddefinitions)
 --fetch-carddefinitions / --fetch-carddefs Fetches all card implementations.
+--fetch-otherdb         Fetches all other configs.
 --ignore-invalid-ids-file   By default, --fetch-carddefinitions will create a file of known-bad card IDs that can be skipped
                             for significantly faster performance on subsequent executions (minutes vs hours).
                             These entries may become stale as skipped cards become implemented; --fetch-carddefinitions should
@@ -329,7 +310,7 @@ Output arguments:
 
 Other arguments:
 --refresh-token (token)  Login with OAuth2.0 refresh token. Youcan use Refresh token only once.
---input-tokenjson        Read Token JSON text from stdin.
+--input-token      Read Token text from stdin.
 -h / --help             This help text. Will also appear automatically if run with no fetch arguments, or no arguments at all.
 """
         );

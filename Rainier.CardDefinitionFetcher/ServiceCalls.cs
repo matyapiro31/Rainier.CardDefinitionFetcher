@@ -51,7 +51,7 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             };
 
             RainierContext rc = new RainierContext { actionGroupType = SharedLogicUtils.source.DataTypes.Analytics.ActionGroupType.Shop };
-            PurchaseShopOfferingsResponse response = client.MakeSyncCall<List<PurchaseRequestDatum>, string, RainierContext, PurchaseShopOfferingsResponse>(client.PurchaseShopOfferingsAsync<RainierContext>, requestDatum, idempotencyKey.ToString(), rc);
+            PurchaseShopOfferingsResponse response = client.MakeSyncCall<List<PurchaseRequestDatum>, string, RainierContext, PurchaseShopOfferingsResponse>(client.PurchaseCatalogAsync<RainierContext>, requestDatum, idempotencyKey.ToString(), rc);
             return response;
         }
 

@@ -12,11 +12,9 @@ This is a small helper program used for both Omukade development and fetching ca
 
 ## Usage
 
-Before running this command, populate the file `secrets.json` in the app's directory with your Pokemon Trainer's Club account. This account is used to fetch
-data from the TCGL servers. eg:
-```json
-{"username": "mysigninname", "password": "abc123"}
-```
+Before running this command, you need to create Pokémon Trainer's Club account. First time you run this command, you need to log in via your browser with shown url.
+After that, paste the url you were redirected to in the console. This will save your refresh token for future use. If you run this command in Docker, Set `PTCGL_FETCHER_REFRESH_TOKEN` enviromental variable to login.
+
 
 **The account used must have previously logged into TCGL** as this app cannot deal with any of the first-signin "authorize TCGL to access your account" stuff.
 
@@ -28,6 +26,9 @@ This application uses AutoPAR to load the TCGL assemblies. Before using this app
 
 ### Arguments
 ```
+Login arguments:
+--input-token           Login with Token JSON file from stdin.
+--refresh-token TOKEN   Login with Refresh Token from command line argument. 
 Fetch arguments (as many as desired can be specified):
 --fetch-itemdb          Fetches the database of items.
 --fetch-cardactions     Fetches the localized list of card actions.
@@ -42,6 +43,7 @@ Fetch arguments (as many as desired can be specified):
 
 --fetch-rules           Fetches the game rules.
 --fetch-aidecks         Fetches a selection of decks used by the AI.
+--fetch-otherdb         Fetches other PTCGL configurations.
 
 Omukade Cheyenne servers typically only need the results of --fetch-carddefinitions --fetch-rules
 

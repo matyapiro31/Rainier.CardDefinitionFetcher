@@ -17,14 +17,18 @@
 **************************************************************************/
 
 using Newtonsoft.Json;
+using Omukade.AutoPAR.Rainier;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TPCI.PTCS;
+using UnityEngine;
 using static Omukade.Tools.RainierCardDefinitionFetcher.Manipulators;
 
 namespace Omukade.Tools.RainierCardDefinitionFetcher
@@ -43,19 +47,33 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             const string SELECTED_LANGUAGE = "en";
             string stage1url = TPCI.PTCS.PTCSUtils.GetAuthRequest(AUTH_STAGE_1_PREFIX, AUDIENCE_VALUE, clientData, SELECTED_LANGUAGE, out string challenge, out string verifier);
             Console.WriteLine("Bot-based login is not allowed now, so you must log in by using Web Browser.");
-            Console.WriteLine("Login url is:");
-            Console.WriteLine(stage1url);
+            // if OS is Windows, open the URL in the default browser
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                string encodedUrl = stage1url.Replace("&", "\"&\"");
+                Process.Start(new ProcessStartInfo("cmd", $"/c start {encodedUrl}") { CreateNoWindow = true });
+            }
+            else
+            {
+                Console.WriteLine("Login url is:");
+                Console.WriteLine(stage1url);
+            }
+            Console.WriteLine();
             HttpClient httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
             httpClient.DefaultRequestHeaders.Add("User-Agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36");
             
             // Stage 7 - POST /oauth2/token
             Console.WriteLine("Insert url start with tpcitcgapp:");
             string? hoge = Console.ReadLine();
-            Uri? stage7url = new Uri(hoge) ;
+            if (hoge == String.Empty)
+            {
+                Environment.Exit(-1);
+            }
+            Uri? stage7url = new Uri(hoge!) ;
             System.Collections.Specialized.NameValueCollection stage7queryparams = System.Web.HttpUtility.ParseQueryString(stage7url.Query.TrimStart('?'));
             FormUrlEncodedContent stage6postbody = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                {"code", stage7queryparams["code"] },
+                {"code", stage7queryparams["code"]! },
                 {"grant_type", "authorization_code" },
                 {"client_id", clientData.clientID },
                 {"code_verifier", verifier },
@@ -66,7 +84,12 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             HttpResponseMessage stage7result = httpClient.PostAsync("https://access.pokemon.com/oauth2/token", stage6postbody).Result;
             string stage7body = stage7result.Content.ReadAsStringAsync().Result;
             Console.WriteLine(stage7body);
-            return JsonConvert.DeserializeObject<PTCSUtils.TokenData>(stage7body);
+            var tokenObject = JsonConvert.DeserializeObject<PTCSUtils.TokenData>(stage7body);
+            Console.WriteLine("Refresh Token is: ");
+            Console.WriteLine(tokenObject.refresh_token);
+            RainierSharedDataHelper.CreateRegistryFile(tokenObject.refresh_token, tokenObject.expires_in);
+
+            return tokenObject;
         }
         public static PTCSUtils.TokenData GetTokenByOAuth(string refreshToken)
         {
@@ -81,9 +104,19 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
                 {"refresh_token", refreshToken }
             });
             HttpResponseMessage result = httpClient.PostAsync("https://access.pokemon.com/oauth2/token", postbody).Result;
+            if (!result.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Failed to get token by refresh token.");
+                File.Delete(Path.Combine(RainierSharedDataHelper.GetSharedDataDirectory(), "config-rcd.json"));
+                Environment.Exit(-1);
+            }
             string tokenJson = result.Content.ReadAsStringAsync().Result;
             Console.WriteLine(tokenJson);
-            return JsonConvert.DeserializeObject<PTCSUtils.TokenData>(tokenJson);
+            var tokenObject = JsonConvert.DeserializeObject<PTCSUtils.TokenData>(tokenJson);
+            Console.WriteLine("Refresh Token is: ");
+            Console.WriteLine(tokenObject.refresh_token);
+            RainierSharedDataHelper.CreateRegistryFile(tokenObject.refresh_token, tokenObject.expires_in);
+            return tokenObject;
         }
     }
 }

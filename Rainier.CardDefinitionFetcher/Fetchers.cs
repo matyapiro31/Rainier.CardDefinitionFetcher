@@ -51,6 +51,7 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
         const string OUTPUT_FOLDER_CARD_DATABASE = @"PTCGL-CardDatabase";
         const string OUTPUT_FOLDER_CARD_ACTIONS = @"PTCGL-CardActions";
         const string OUTPUT_FOLDER_QUEST_DATA = @"PTCGL-QuestData";
+        const string OUTPUT_FOLDER_OTHER_DATABASE = @"PTCGL-OtherDatabase";
         const string OMUKADE_FAKE_BOARD_ID = "OMUKADE-FAKE-BOARD-ID";
         const string OMUKADE_FAKE_OPPONENT_ID = "OMUKADE-FAKE-OPPONENT-ID";
 
@@ -169,7 +170,7 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
                             string fname = card.Value<string>("cardSourceID") + ".json";
                             string fullPath = Path.Combine(setFolder, fname);
 
-                            File.WriteAllText(fullPath, JsonConvert.SerializeObject(card));
+                            File.WriteAllText(fullPath, JsonConvert.SerializeObject(card, Formatting.Indented));
                         }
 
                         if (invalidCardIds.Any())
@@ -195,16 +196,78 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             GameContext bakedGameContext = new GameContext("game-get-gamedata") { board = bakedBoard };
 
             var queryResultRaw = client.MakeSyncCall<string, object, QueryResponse>(client.QueryAsyncWithJsonContext, "game-get-gamedata", bakedGameContext);
-            GameDataResponse gdrRaw = JsonConvert.DeserializeObject<GameDataResponse>(queryResultRaw.resultAsString().Replace(fakeBoardEntityToReplace, OMUKADE_FAKE_BOARD_ID));
+            GameDataResponse gdrRaw = JsonConvert.DeserializeObject<GameDataResponse>(queryResultRaw.resultAsString().Replace(fakeBoardEntityToReplace, OMUKADE_FAKE_BOARD_ID))!;
             File.WriteAllText(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DEFINITIONS, $"game-data-{mode}.json"), gdrRaw.gameData);
         }
 
         public static void FetchAndSaveItemDatabase(Client client)
         {
             Directory.CreateDirectory(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DATABASE));
-            ConfigDocumentGetResponse manifestDocument = client.GetConfigDocumentSync("item-set-database_0.0");
+            ConfigDocumentGetResponse itemManifestDocument = client.GetConfigDocumentSync("item-set-database_0.0");
+            File.WriteAllText(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DATABASE, "item-set-database.json"), itemManifestDocument.data["itemsets"].contentString);
+        }
 
-            File.WriteAllText(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_CARD_DATABASE, "item-set-database.json"), manifestDocument.data["itemsets"].contentString);
+        public static void FetchAndSaveOtherDatabase(Client client)
+        {
+            Directory.CreateDirectory(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_OTHER_DATABASE));
+            IList<string> otherDatabaseNames = new List<string> {
+                "feature-flags_0.0",
+                "permissions_0.0",
+                "deck-definition-manifest_0.0",
+                "avatar-compendium_0.0",
+                "booster-compendium_0.0",
+                "battle-box-compendium_0.0",
+                "deck-customization-compendium_0.0",
+                "season_current_0.0",
+                "telemetry-settings-prod_0.0",
+                "card-format-manifest_0.0",
+                "rarity-manifest_0.0",
+                "localization-bundle-manifest_0.0",
+                "news_0.0",
+                "item-set-database-deck-customization_0.0",
+                "shop-pages-manifest_0.0",
+                "card-databases-manifest_0.0",
+                "asset-bundle-manifest_0.0",
+                "dust-table_0.1",
+                "rules-manifest_0.0",
+                "dynamic-startup_0.0",
+                "avatar-assets_0.0",
+                "season_0036_0.1",
+                "season_current_0.0",
+                "gifts_0.0",
+                "deckImportData_0.0",
+                "prestige-level-data_0.0",
+                "cardFilters_0.0",
+            //    "default-avatar-outfit_0.0",
+                "avatar-compendium_0.0",
+            //    "card-compendium",
+                "battle-box-compendium_0.0",
+                "cardsource-set-manifest_0.0",
+                "ftue-decks_0.0",
+            //    "league-ranks_0.0",
+                "ftue-current_0.0",
+                "expansion-challenge-archive_0.0",
+                "season-exp_0.0",
+                "sv8-5-expansionchallenge_0.0",
+            //    "date-indicator_0.0",
+            };
+            foreach(string odbName in otherDatabaseNames)
+            {
+
+                try
+                {
+                    ConfigDocumentGetResponse otherDatabaseDocument = client.GetConfigDocumentSync(odbName);
+                    foreach (var pair in otherDatabaseDocument.data)
+                    {
+                        File.WriteAllText(Path.Combine(Program.outputFolder, OUTPUT_FOLDER_OTHER_DATABASE, $"{odbName}-{pair.Key}.json"), pair.Value.contentString);
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    Console.Write($"db error: {ex.ToString()}");
+                }
+            }
         }
 
         public static void FetchAndSaveCardDatabase(Client client)
@@ -215,7 +278,7 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
             configToUse.batchDownloadConfigs = true;
 
             ConfigDocumentGetResponse manifestDocument = client.GetConfigDocumentSync(configToUse.manifestConfigName + "_" + configToUse.manifestConfigVer);
-            List<string> manifestConfig = JsonConvert.DeserializeObject<List<string>>(manifestDocument.data[configToUse.manifestConfigKey].contentString);
+            List<string> manifestConfig = JsonConvert.DeserializeObject<List<string>>(manifestDocument.data[configToUse.manifestConfigKey].contentString)!;
 
             AnsiConsole.Progress()
                 .HideCompleted(false)
