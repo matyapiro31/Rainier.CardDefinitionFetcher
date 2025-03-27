@@ -402,3 +402,7 @@ FodyWeavers.xsd
 
 */PTCGLLib/*.dll
 desktop.ini
+
+# Remove personal test codes.
+Local/*.cs
+*.cs
