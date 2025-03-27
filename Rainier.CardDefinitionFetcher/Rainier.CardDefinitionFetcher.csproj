@@ -23,45 +23,38 @@
 
   <ItemGroup>
 	  <Reference Include="CardDatabase.DataAccess">
-		  <HintPath>.\PTCGLLib\CardDatabase.DataAccess.dll</HintPath>
+		  <HintPath>..\..\PTCGLLib\CardDatabase.DataAccess.dll</HintPath>
 		  <Private>True</Private>
 	  </Reference>
 	  <Reference Include="ClientNetworking">
-	    <HintPath>..\..\Omukade\PTCGLLib\ClientNetworking.dll</HintPath>
+	    <HintPath>..\..\PTCGLLib\ClientNetworking.dll</HintPath>
 	  </Reference>
-    <Reference Include="FlatBuffers.Core">
-      <HintPath>.\PTCGLLib\FlatBuffers.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+	  <Reference Include="Google.FlatBuffers">
+	    <HintPath>..\..\PTCGLLib\Google.FlatBuffers.dll</HintPath>
+	  </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>.\PTCGLLib\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\..\PTCGLLib\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MatchLogic">
-      <HintPath>.\PTCGLLib\MatchLogic.dll</HintPath>
+      <HintPath>..\..\PTCGLLib\MatchLogic.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>.\PTCGLLib\Mono.Cecil.dll</HintPath>
+      <HintPath>..\..\PTCGLLib\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="SharedLogicUtils">
-      <HintPath>.\PTCGLLib\SharedLogicUtils.dll</HintPath>
+      <HintPath>..\..\PTCGLLib\SharedLogicUtils.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="TPCI.PTCS">
-      <HintPath>.\PTCGLLib\TPCI.PTCS.dll</HintPath>
+      <HintPath>..\..\PTCGLLib\TPCI.PTCS.dll</HintPath>
       <Private>True</Private>
     </Reference>
 	<Reference Include="UnityEngine.CoreModule">
-		<HintPath>.\PTCGLLib\UnityEngine.CoreModule.dll</HintPath>
+		<HintPath>..\..\PTCGLLib\UnityEngine.CoreModule.dll</HintPath>
 		<Private>True</Private>
 	</Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="secrets.example.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

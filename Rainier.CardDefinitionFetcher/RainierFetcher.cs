@@ -79,7 +79,7 @@ namespace Omukade.AutoPAR.Rainier
         {
             using HttpClient client = new HttpClient();
             string dataRaw = await client.GetStringAsync(url);
-            T dataParsed = JsonConvert.DeserializeObject<T>(dataRaw);
+            T dataParsed = JsonConvert.DeserializeObject<T>(dataRaw)!;
             return dataParsed;
         }
 
@@ -123,7 +123,7 @@ namespace Omukade.AutoPAR.Rainier
         /// <exception cref="InvalidDataException"></exception>
         internal static async Task DownloadUpdateFileMockable(UpdaterManifest manifest, Stream responseStream)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(UpdateZipFilename));
+            Directory.CreateDirectory(Path.GetDirectoryName(UpdateZipFilename)!);
             using FileStream updateFileStream = new FileStream(UpdateZipFilename, FileMode.Create, FileAccess.Write, FileShare.None);
             await responseStream.CopyToAsync(updateFileStream);
             updateFileStream.Close();

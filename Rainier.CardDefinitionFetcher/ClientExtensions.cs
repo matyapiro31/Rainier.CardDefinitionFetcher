@@ -16,11 +16,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-/*
-using Platform.Sdk;
-using Platform.Sdk.Models;
-using Platform.Sdk.Models.Config;
-*/
 using ClientNetworking;
 using ClientNetworking.Models;
 using ClientNetworking.Models.Config;
@@ -53,59 +48,59 @@ namespace Omukade.Tools.RainierCardDefinitionFetcher
 
         public static TResult MakeSyncCall<TResult>(this Client client, Func<ResponseHandler<TResult>, ErrorHandler, Task> queryCall)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             queryCall.Invoke((client, result) => queryResult = result, GenericErrorHandler).Wait();
             return queryResult;
         }
 
         public static TResult MakeSyncCall<TParam1, TResult>(this Client client, Func<TParam1, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             queryCall.Invoke(param1, (client, result) => queryResult = result, GenericErrorHandler).Wait();
             return queryResult;
         }
 
         public static TResult MakeSyncCall<TParam1, TParam2, TResult>(this Client client, Func<TParam1, TParam2, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1, TParam2 param2)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             queryCall.Invoke(param1, param2, (client, result) => queryResult = result, GenericErrorHandler).Wait();
             return queryResult;
         }
 
         public static TResult MakeSyncCall<TParam1, TParam2, TParam3, TResult>(this Client client, Func<TParam1, TParam2, TParam3, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1, TParam2 param2, TParam3 param3)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             queryCall.Invoke(param1, param2, param3, (client, result) => queryResult = result, GenericErrorHandler).Wait();
             return queryResult;
         }
 
         public static ConfigDocumentGetResponse GetConfigDocumentSync(this Client client, string configDocumentName)
-            => client.MakeSyncCall<string, string, ConfigDocumentGetResponse>(client.GetConfigDocumentAsync, configDocumentName, /*ifNewerThanVersion*/ null);
+            => client.MakeSyncCall<string, string, ConfigDocumentGetResponse>(client.GetConfigDocumentAsync, configDocumentName, "");
 
         public static async Task<TResult> MakeAsyncCall<TResult>(this Client client, Func<ResponseHandler<TResult>, ErrorHandler, Task> queryCall)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             await queryCall.Invoke((client, result) => queryResult = result, GenericErrorHandler);
             return queryResult;
         }
 
         public static async Task<TResult> MakeAsyncCall<TParam1, TResult>(this Client client, Func<TParam1, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             await queryCall.Invoke(param1, (client, result) => queryResult = result, GenericErrorHandler);
             return queryResult;
         }
 
         public static async Task<TResult> MakeAsyncCall<TParam1, TParam2, TResult>(this Client client, Func<TParam1, TParam2, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1, TParam2 param2)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             await queryCall.Invoke(param1, param2, (client, result) => queryResult = result, GenericErrorHandler);
             return queryResult;
         }
 
         public static async Task<TResult> MakeAsyncCall<TParam1, TParam2, TParam3, TResult>(this Client client, Func<TParam1, TParam2, TParam3, ResponseHandler<TResult>, ErrorHandler, Task> queryCall, TParam1 param1, TParam2 param2, TParam3 param3)
         {
-            TResult queryResult = default;
+            TResult queryResult = default!;
             await queryCall.Invoke(param1, param2, param3, (client, result) => queryResult = result, GenericErrorHandler);
             return queryResult;
         }

@@ -13,18 +13,18 @@ namespace Omukade.AutoPAR.Rainier
     {
         public class NoteEntry
         {
-            public string Header="";
-            public List<string> LineItems=[];
+            public string Header = "";
+            public List<string> LineItems = [];
         }
 
-        public string Version;
+        public string Version = "1.0";
 
         [JsonProperty("Date")]
         public string DateRaw="";
 
-        public List<NoteEntry> Notes;
+        public List<NoteEntry> Notes = [];
 
-        public string SupportInfo;
+        public string SupportInfo = "";
 
         /// <summary>
         /// Parses the release note's datestring (<see cref="DateRaw"/>) to a <see cref="DateTime"/>.
